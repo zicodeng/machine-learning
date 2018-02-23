@@ -28,8 +28,11 @@ scaler = MinMaxScaler()
 train_features_scaled = scaler.fit_transform(train_features)
 test_features_scaled = scaler.fit_transform(test_features)
 
-# Picking the best number of neighbors (K)
-
+'''
+--------------------------------------------------------------------------------
+Picking the best number of neighbors (K)
+--------------------------------------------------------------------------------
+'''
 # Crete a validation set by sampling 20% (.2) out of the "training" data.
 train_features_small, validation_features, train_outcome_small, validation_outcome = train_test_split(
     train_features, train_outcome, test_size=0.2, random_state=11)
@@ -59,20 +62,23 @@ knn_clf = KNeighborsClassifier(n_neighbors=best_k)
 
 # K-Fold Cross Validation
 # How accurately a predictive model will perform in practice.
-# The shortcoming of this validation technique is that it only runs a single model
-# across K different folds of data.
-# If our case, the single model is when parameter k = 6.
-# But what happens to model with parameter k = 1, 2, 3...?
 cv = np.mean(cross_val_score(knn_clf, train_features,
                              train_outcome, cv=KFold(n_splits=10, shuffle=True, random_state=11)))
 print('K-FOLD CV:', cv)
 
-# Grid Search Cross Validation
-# This model validation technique addresses the issue of simple cross validation.
+'''
+--------------------------------------------------------------------------------
+Grid Search Cross Validation
+--------------------------------------------------------------------------------
+'''
+# So far, we have tried finding the best K through cross validation.
+# But what if we have more parameters not just K that need to be tuned?
+# We can do the above process in a nested for loop, but this is tedious.
+# This is where grid search comes in. It allows us to tune any number of parameters
+# and generate a model that has the highest accuracy.
 
 # Build model with unscaled data.
 param_grid = {'n_neighbors': np.arange(1, 50)}
-# Generate two grid search so that we can compare difference between models generated from scaled and unscaled training features data.
 grid_search = GridSearchCV(KNeighborsClassifier(), param_grid)
 
 # Fit the grid search to the training data.
@@ -92,7 +98,11 @@ plt.xlabel('Number of Neighbors')
 plt.ylabel('Average Accuracy Across CV Folds')
 plt.show()
 
-# Build model with scaled data.
+'''
+--------------------------------------------------------------------------------
+Build Model with Scaled Data
+--------------------------------------------------------------------------------
+'''
 param_grid_scaled = {'n_neighbors': np.arange(1, 50)}
 grid_search_scaled = GridSearchCV(KNeighborsClassifier(), param_grid)
 grid_search_scaled.fit(train_features_scaled, train_outcome)
@@ -108,8 +118,11 @@ plt.xlabel('Number of Neighbors')
 plt.ylabel('Average Accuracy Across CV Folds')
 plt.show()
 
-# Build model with scaled data using pipe.
-# Integrate the data scaling into our cross validation process with pipeline (recommended).
+'''
+--------------------------------------------------------------------------------
+Integrate the Data Scaling into Our Grid Search Process with Pipeline (Recommended).
+--------------------------------------------------------------------------------
+'''
 pipe = make_pipeline(MinMaxScaler(), KNeighborsClassifier())
 
 # Pass your pipeline to a grid search, specifying a set of neighbors to assess.
